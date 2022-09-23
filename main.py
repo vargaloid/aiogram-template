@@ -5,7 +5,9 @@ from os import getenv
 from loguru import logger
 from aiogram.types import BotCommand
 from aiogram import Bot, Dispatcher, types
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
+from bot.filters.user import IsUser
 from bot.handlers.bot_commands import register_bot_commands
 from bot.handlers.bot_messages import register_bot_messages
 
@@ -13,6 +15,10 @@ from bot.handlers.bot_messages import register_bot_messages
 def register_all_handlers(dp):
     register_bot_commands(dp)
     register_bot_messages(dp)
+
+
+def register_all_filters(dp):
+    dp.filters_factory.bind(IsUser)
 
 
 async def set_bot_commands(bot: Bot):
@@ -29,6 +35,12 @@ async def main():
                filter=None, colorize=None, backtrace=True, diagnose=True, enqueue=False, catch=True,
                rotation="1 days", compression="zip")
 
+    logger.add("logs/bot.log", level="DEBUG", encoding="utf8",
+               format='{time:YYYY-MM-DD HH:mm:ss.SSS} | <level>{level: <8}</level> | {name}:{function}:{line} - '
+                      '<level>{''message}</level>',
+               filter=None, colorize=None, backtrace=True, diagnose=True, enqueue=False, catch=True,
+               rotation="1 days", compression="zip")
+
     logger.add("logs/error.log", level="ERROR", encoding="utf8",
                format='{time:YYYY-MM-DD HH:mm:ss.SSS} | <level>{level: <8}</level> | {name}:{function}:{line} - '
                       '<level>{''message}</level>',
@@ -40,14 +52,16 @@ async def main():
         logger.error('Error: no Bot token provided')
         exit("Error: no Bot token provided")
 
+    storage = MemoryStorage()
     bot = Bot(token=bot_token, parse_mode=types.ParseMode.HTML)
-    dp = Dispatcher(bot)
+    dp = Dispatcher(bot, storage=storage)
 
+    register_all_filters(dp)
     register_all_handlers(dp)
 
     await set_bot_commands(bot)
 
-    logger.info('Starting bot..')
+    logger.info('Bot started!')
 
     try:
         await dp.start_polling()
