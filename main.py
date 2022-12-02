@@ -8,6 +8,7 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 from bot.filters.user import IsUser
+from bot.handlers.user import register_users
 from bot.handlers.bot_commands import register_bot_commands
 from bot.handlers.bot_messages import register_bot_messages
 
@@ -15,6 +16,7 @@ from bot.handlers.bot_messages import register_bot_messages
 def register_all_handlers(dp):
     register_bot_commands(dp)
     register_bot_messages(dp)
+    register_users(dp)
 
 
 def register_all_filters(dp):
@@ -24,6 +26,7 @@ def register_all_filters(dp):
 async def set_bot_commands(bot: Bot):
     commands = [
         BotCommand(command="start", description="Start bot"),
+        BotCommand(command="user", description="Users management"),
     ]
     await bot.set_my_commands(commands)
 
